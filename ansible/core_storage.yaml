@@ -1,0 +1,11 @@
+# STORAGE
+# -------
+
+- name: "get k/v: openstack_storage_backend_name"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/storage/{{ openlabs_vm_hostname }}/backend_name"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_storage_backend_name
+- debug: var=openstack_storage_backend_name.data.Value

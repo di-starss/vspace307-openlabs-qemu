@@ -1,0 +1,48 @@
+#
+# Openstack / Mgmt
+#
+
+- name: "openstack"
+  become: true
+  gather_facts: false
+  hosts: localhost
+
+  tasks:
+    # CORE
+    - include: core.yaml
+
+    # REPO
+    - name: "pkg: openstack repo"
+      shell: "add-apt-repository cloud-archive:{{ openstack_release.data.Value }} -y"
+
+    - name: "pkg: update & upgrade"
+      apt:
+        upgrade: dist
+        update_cache: yes
+
+    # OPENSTACK
+    - name: "install openstack: openstackclient"
+      apt:
+        pkg:
+          - python3-openstackclient
+          - libguestfs-tools
+
+    # MGMT
+    - name: "cfg: openstackrc"
+      template:
+        src: tmpl/openstackrc
+        dest: /root/openstackrc
+
+    - name: "cfg: openstack/keypair"
+      template:
+        src: tmpl/mgmt_key.conf
+        dest: "/tmp/keypair_{{ openlabs_mgmt_user }}"
+
+    - name: "install: terraform"
+      shell: |
+        apt-get update
+        apt-get install -y gnupg software-properties-common curl
+        curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+        apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+        apt-get update
+        apt-get install terraform

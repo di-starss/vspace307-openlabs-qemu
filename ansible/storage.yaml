@@ -1,0 +1,82 @@
+#
+# Openstack / Storage
+#
+
+- name: "openstack"
+  become: true
+  gather_facts: false
+  hosts: localhost
+
+  tasks:
+    # CORE
+    - include: core.yaml
+    - include: core_storage.yaml
+
+    # REPO
+    - name: "pkg: openstack repo"
+      shell: "add-apt-repository cloud-archive:{{ openstack_release.data.Value }} -y"
+
+    - name: "pkg: update & upgrade"
+      apt:
+        upgrade: dist
+        update_cache: yes
+
+    # OPENSTACK
+    - name: "install openstack: storage (cinder)"
+      apt:
+        pkg:
+          - cinder-volume
+
+    # CINDER
+    - name: "cfg: cinder"
+      template:
+        src: tmpl/cinder-storage.conf
+        dest: /etc/cinder/cinder.conf
+        owner: cinder
+        group: cinder
+
+    - name: "cmd: lvs"
+      shell: |
+        pvcreate /dev/vdb
+        vgcreate -s 32M vg_volume01 /dev/vdb
+
+    - name: "cmd: iscsi-iname"
+      shell: |
+        iscsi-iname
+      register: iscsi_iname
+
+    - name: "cfg: iscsi/initiatorname.iscsi"
+      template:
+        src: tmpl/initiatorname.conf
+        dest: /etc/iscsi/initiatorname.iscsi
+
+    - name: "systemd (restart): tgt"
+      systemd:
+        name: tgt
+        state: restarted
+
+    - name: "systemd (enabled): tgt"
+      systemd:
+        name: tgt
+        enabled: yes
+
+    - name: "systemd (restart): cinder-volume"
+      systemd:
+        name: cinder-volume
+        state: restarted
+
+    - name: "systemd (enabled): cinder-volume"
+      systemd:
+        name: cinder-volume
+        enabled: yes
+
+    # RSYSLOG & LOGDNA
+    - name: "cfg: rsyslog"
+      template:
+        src: tmpl/rsyslog.conf
+        dest: /etc/rsyslog.d/77-logdna.conf
+
+    - name: "systemd (restart): rsyslog"
+      systemd:
+        name: rsyslog
+        state: restarted

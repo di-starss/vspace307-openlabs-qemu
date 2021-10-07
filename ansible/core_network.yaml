@@ -1,0 +1,11 @@
+# NETWORK
+# -------
+
+- name: "get k/v: default_availability_zones"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/net/{{ openlabs_vm_hostname }}/az"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: default_availability_zones
+- debug: var=default_availability_zones.data.Value

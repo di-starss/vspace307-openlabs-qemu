@@ -1,0 +1,143 @@
+#
+# Openstack / Network
+#
+
+- name: "openstack"
+  become: true
+  gather_facts: false
+  hosts: localhost
+
+  tasks:
+    # CORE
+    - include: core.yaml
+    - include: core_network.yaml
+
+    # REPO
+    - name: "pkg: openstack repo"
+      shell: "add-apt-repository cloud-archive:{{ openstack_release.data.Value }} -y"
+
+    - name: "pkg: update & upgrade"
+      apt:
+        upgrade: dist
+        update_cache: yes
+
+    # OPENSTACK
+    - name: "install openstack: network (neutron)"
+      apt:
+        pkg:
+          - neutron-plugin-ml2
+          - neutron-l3-agent
+          - neutron-dhcp-agent
+          - neutron-metadata-agent
+          - neutron-openvswitch-agent
+          - openvswitch-switch
+
+    # NEUTRON
+    - name: "cfg: neutron"
+      template:
+        src: tmpl/neutron-network.conf
+        dest: /etc/neutron/neutron.conf
+        owner: neutron
+        group: neutron
+
+    - name: "cfg: neutron/dhcp"
+      template:
+        src: tmpl/neutron-dhcp_agent-network.ini
+        dest: /etc/neutron/dhcp_agent.ini
+        owner: neutron
+        group: neutron
+
+    - name: "cfg: neutron/meta"
+      template:
+        src: tmpl/neutron-metadata_agent-network.ini
+        dest: /etc/neutron/metadata_agent.ini
+        owner: neutron
+        group: neutron
+
+    - name: "cfg: neutron/l3"
+      template:
+        src: tmpl/neutron-l3_agent-network.ini
+        dest: /etc/neutron/l3_agent.ini
+        owner: neutron
+        group: neutron
+
+    - name: "cfg: neutron/ml2"
+      template:
+        src: tmpl/neutron-ml2_conf-network.ini
+        dest: /etc/neutron/plugins/ml2/ml2_conf.ini
+        owner: neutron
+        group: neutron
+
+    - name: "cfg: neutron/ovs"
+      template:
+        src: tmpl/neutron-openvswitch_agent-network.ini
+        dest: /etc/neutron/plugins/ml2/openvswitch_agent.ini
+        owner: neutron
+        group: neutron
+
+    - name: "cmd: ovs"
+      shell: |
+        ovs-vsctl add-br br-{{ openstack_network_ovs_if.data.Value }}
+        ovs-vsctl add-port br-{{ openstack_network_ovs_if.data.Value }} {{ openstack_network_ovs_if.data.Value }}
+        ln -s /etc/neutron/plugins/ml2/ml2_conf.ini /etc/neutron/plugin.ini
+
+    - name: "cmd: ovs-show"
+      shell: |
+        ovs-vsctl show
+      register: ovs_show
+    - debug: var=ovs_show.stdout_lines
+
+    # neutron-openvswitch-agent
+    - name: "systemd (restart): neutron-openvswitch-agent"
+      systemd:
+        name: neutron-openvswitch-agent
+        state: restarted
+
+    - name: "systemd (enabled): neutron-openvswitch-agent"
+      systemd:
+        name: neutron-openvswitch-agent
+        enabled: yes
+
+    # neutron-dhcp-agent
+    - name: "systemd (restart): neutron-dhcp-agent"
+      systemd:
+        name: neutron-dhcp-agent
+        state: restarted
+
+    - name: "systemd (enabled): neutron-dhcp-agent"
+      systemd:
+        name: neutron-dhcp-agent
+        enabled: yes
+
+    # neutron-metadata-agent
+    - name: "systemd (restart): neutron-metadata-agent"
+      systemd:
+        name: neutron-metadata-agent
+        state: restarted
+
+    - name: "systemd (enabled): neutron-metadata-agent"
+      systemd:
+        name: neutron-metadata-agent
+        enabled: yes
+
+    # neutron-l3-agent
+    - name: "systemd (restart): neutron-l3-agent"
+      systemd:
+        name: neutron-l3-agent
+        state: restarted
+
+    - name: "systemd (enabled): neutron-l3-agent"
+      systemd:
+        name: neutron-l3-agent
+        enabled: yes
+
+    # RSYSLOG & LOGDNA
+    - name: "cfg: rsyslog"
+      template:
+        src: tmpl/rsyslog.conf
+        dest: /etc/rsyslog.d/77-logdna.conf
+
+    - name: "systemd (restart): rsyslog"
+      systemd:
+        name: rsyslog
+        state: restarted

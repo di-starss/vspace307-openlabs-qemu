@@ -1,0 +1,145 @@
+#
+# Openstack / Compute
+#
+
+- name: "openstack"
+  become: true
+  gather_facts: false
+  hosts: localhost
+
+  tasks:
+    # CORE
+    - include: core.yaml
+    - include: core_compute.yaml
+
+    # REPO
+    - name: "pkg: openstack repo"
+      shell: "add-apt-repository cloud-archive:{{ openstack_release.data.Value }} -y"
+
+    - name: "pkg: update & upgrade"
+      apt:
+        upgrade: dist
+        update_cache: yes
+
+    # HOSTS
+    - name: "cfg: hosts"
+      template:
+        src: tmpl/hosts.j2
+        dest: /etc/hosts
+
+    # OPENSTACK
+    - name: "install openstack: compute (nova,neutron)"
+      apt:
+        pkg:
+          - nova-compute
+          - nova-compute-kvm
+          - neutron-plugin-ml2
+          - openvswitch-switch
+          - neutron-openvswitch-agent
+
+    - name: "cfg: default/libvirtd"
+      template:
+        src: tmpl/libvirtd_default.conf
+        dest: /etc/default/libvirtd
+
+    - name: "cfg: libvirtd"
+      template:
+        src: tmpl/libvirtd.conf
+        dest: /etc/libvirt/libvirtd.conf
+
+    - name: "systemd (enabled): libvirtd"
+      systemd:
+        name: libvirtd
+        enabled: yes
+
+    - name: "systemd (stopped): libvirtd"
+      systemd:
+        name: libvirtd
+        state: stopped
+
+    - name: "cmd: libvirtd -d -l"
+      shell: |
+        /usr/sbin/libvirtd -d -l
+
+    - name: "cmd: iscsi-iname"
+      shell: |
+        iscsi-iname
+      register: iscsi_iname
+
+    - name: "cfg: iscsi/initiatorname.iscsi"
+      template:
+        src: tmpl/initiatorname.conf
+        dest: /etc/iscsi/initiatorname.iscsi
+
+    # NEUTRON
+    - name: "cfg: neutron"
+      template:
+        src: tmpl/neutron-compute.conf
+        dest: /etc/neutron/neutron.conf
+        owner: neutron
+        group: neutron
+
+    - name: "cfg: neutron/ml2"
+      template:
+        src: tmpl/neutron-ml2_conf-compute.ini
+        dest: /etc/neutron/plugins/ml2/ml2_conf.ini
+        owner: neutron
+        group: neutron
+
+    - name: "cfg: neutron/ml2/ovs"
+      template:
+        src: tmpl/neutron-openvswitch_agent-compute.ini
+        dest: /etc/neutron/plugins/ml2/openvswitch_agent.ini
+        owner: neutron
+        group: neutron
+
+    - name: "cmd: ovs"
+      shell: |
+        ovs-vsctl add-br br-{{ openstack_compute_ovs_if.data.Value }}
+        ovs-vsctl add-port br-{{ openstack_compute_ovs_if.data.Value }} {{ openstack_compute_ovs_if.data.Value }}
+        ln -s /etc/neutron/plugins/ml2/ml2_conf.ini /etc/neutron/plugin.ini
+
+    - name: "cmd: ovs-show"
+      shell: |
+        ovs-vsctl show
+      register: ovs_show
+    - debug: var=ovs_show.stdout_lines
+
+    - name: "systemd (restart): neutron-openvswitch-agent"
+      systemd:
+        name: neutron-openvswitch-agent
+        state: restarted
+
+    - name: "systemd (enabled): neutron-openvswitch-agent"
+      systemd:
+        name: neutron-openvswitch-agent
+        enabled: yes
+
+    # NOVA
+    - name: "cfg: nova"
+      template:
+        src: tmpl/nova-controller.conf
+        dest: /etc/nova/nova.conf
+        owner: nova
+        group: nova
+
+    - name: "systemd (restart): nova-compute"
+      systemd:
+        name: nova-compute
+        state: restarted
+
+    - name: "systemd (enabled): nova-compute"
+      systemd:
+        name: nova-compute
+        enabled: yes
+
+    # RSYSLOG & LOGDNA
+    - name: "cfg: rsyslog"
+      template:
+        src: tmpl/rsyslog.conf
+        dest: /etc/rsyslog.d/77-logdna.conf
+
+    - name: "systemd (restart): rsyslog"
+      systemd:
+        name: rsyslog
+        state: restarted

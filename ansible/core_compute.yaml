@@ -1,0 +1,183 @@
+# KVM
+# ---
+
+# openstack_vm_ams_kvm0
+# openstack_vm_ams_kvm1
+# openstack_vm_ams_kvm2
+# openstack_vm_ldn_kvm3
+# openstack_vm_ldn_kvm4
+# openstack_vm_ldn_kvm5
+- name: "get k/v: openstack_vm_ams_kvm0"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/openstack/openstack_vm_ams_kvm0"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_vm_ams_kvm0
+- debug: var=openstack_vm_ams_kvm0.data.Value
+
+- name: "get k/v: openstack_vm_ams_kvm1"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/openstack/openstack_vm_ams_kvm1"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_vm_ams_kvm1
+- debug: var=openstack_vm_ams_kvm1.data.Value
+
+- name: "get k/v: openstack_vm_ams_kvm2"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/openstack/openstack_vm_ams_kvm2"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_vm_ams_kvm2
+- debug: var=openstack_vm_ams_kvm2.data.Value
+
+- name: "get k/v: openstack_vm_ldn_kvm3"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/openstack/openstack_vm_ldn_kvm3"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_vm_ldn_kvm3
+- debug: var=openstack_vm_ldn_kvm3.data.Value
+
+- name: "get k/v: openstack_vm_ldn_kvm4"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/openstack/openstack_vm_ldn_kvm4"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_vm_ldn_kvm4
+- debug: var=openstack_vm_ldn_kvm4.data.Value
+
+- name: "get k/v: openstack_vm_ldn_kvm5"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/openstack/openstack_vm_ldn_kvm5"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_vm_ldn_kvm5
+- debug: var=openstack_vm_ldn_kvm5.data.Value
+
+
+# openstack_ip_ams_kvm0
+# openstack_ip_ams_kvm1
+# openstack_ip_ams_kvm2
+# openstack_ip_ldn_kvm3
+# openstack_ip_ldn_kvm4
+# openstack_ip_ldn_kvm5
+- name: "get k/v: openstack_ip_ams_kvm0"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/vm/{{ openstack_vm_ams_kvm0.data.Value }}/vm_ip"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_ip_ams_kvm0
+- debug: var=openstack_ip_ams_kvm0.data.Value
+
+- name: "get k/v: openstack_ip_ams_kvm1"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/vm/{{ openstack_vm_ams_kvm1.data.Value }}/vm_ip"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_ip_ams_kvm1
+- debug: var=openstack_ip_ams_kvm1.data.Value
+
+- name: "get k/v: openstack_ip_ams_kvm2"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/vm/{{ openstack_vm_ams_kvm2.data.Value }}/vm_ip"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_ip_ams_kvm2
+- debug: var=openstack_ip_ams_kvm2.data.Value
+
+- name: "get k/v: openstack_ip_ldn_kvm3"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/vm/{{ openstack_vm_ldn_kvm3.data.Value }}/vm_ip"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_ip_ldn_kvm3
+- debug: var=openstack_ip_ldn_kvm3.data.Value
+
+- name: "get k/v: openstack_ip_ldn_kvm4"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/vm/{{ openstack_vm_ldn_kvm4.data.Value }}/vm_ip"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_ip_ldn_kvm4
+- debug: var=openstack_ip_ldn_kvm4.data.Value
+
+- name: "get k/v: openstack_ip_ldn_kvm5"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/vm/{{ openstack_vm_ldn_kvm5.data.Value }}/vm_ip"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_ip_ldn_kvm5
+- debug: var=openstack_ip_ldn_kvm5.data.Value
+
+# openstack_hostname_ams_kvm0
+# openstack_hostname_ams_kvm1
+# openstack_hostname_ams_kvm2
+# openstack_hostname_ldn_kvm3
+# openstack_hostname_ldn_kvm4
+# openstack_hostname_ldn_kvm5
+- name: "get k/v: openstack_hostname_ams_kvm0"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/vm/{{ openstack_vm_ams_kvm0.data.Value }}/vm_hostname"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_hostname_ams_kvm0
+- debug: var=openstack_hostname_ams_kvm0.data.Value
+
+- name: "get k/v: openstack_hostname_ams_kvm1"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/vm/{{ openstack_vm_ams_kvm1.data.Value }}/vm_hostname"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_hostname_ams_kvm1
+- debug: var=openstack_hostname_ams_kvm1.data.Value
+
+- name: "get k/v: openstack_hostname_ams_kvm2"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/vm/{{ openstack_vm_ams_kvm2.data.Value }}/vm_hostname"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_hostname_ams_kvm2
+- debug: var=openstack_hostname_ams_kvm2.data.Value
+
+- name: "get k/v: openstack_hostname_ldn_kvm3"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/vm/{{ openstack_vm_ldn_kvm3.data.Value }}/vm_hostname"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_hostname_ldn_kvm3
+- debug: var=openstack_hostname_ldn_kvm3.data.Value
+
+- name: "get k/v: openstack_hostname_ldn_kvm4"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/vm/{{ openstack_vm_ldn_kvm4.data.Value }}/vm_hostname"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_hostname_ldn_kvm4
+- debug: var=openstack_hostname_ldn_kvm4.data.Value
+
+- name: "get k/v: openstack_hostname_ldn_kvm5"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/vm/{{ openstack_vm_ldn_kvm5.data.Value }}/vm_hostname"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_hostname_ldn_kvm5
+- debug: var=openstack_hostname_ldn_kvm5.data.Value

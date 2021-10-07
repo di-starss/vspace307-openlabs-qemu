@@ -1,0 +1,464 @@
+#
+# Openstack / Controller
+#
+
+#
+# ansible-playbook -i api.endpoint.di.openlabs.rg1.cloud.vspace307.io, \
+#     --extra-vars="openlabs_consul_host=consul.openlabs.vspace307.io openlabs_consul_port=8500 openlabs_consul_scheme=http openlabs_env=di openlabs_vm_name=api" controller.yaml
+#
+
+- name: "openstack"
+  become: true
+  gather_facts: false
+  hosts: localhost
+
+  tasks:
+    # CORE
+    - include: core.yaml
+
+    # REPO
+    - name: "pkg: openstack repo"
+      shell: "add-apt-repository cloud-archive:{{ openstack_release.data.Value }} -y"
+
+    - name: "pkg: update & upgrade"
+      apt:
+        upgrade: dist
+        update_cache: yes
+
+    # PKG
+    - name: "install openstack: controller (db,mq,cache,apache2)"
+      apt:
+        pkg:
+          - mariadb-server
+          - python3-pymysql
+          - rabbitmq-server
+          - memcached
+          - apache2
+          - libapache2-mod-wsgi-py3
+        state: present
+
+    # DB
+    - name: "cfg: db"
+      template:
+        src: tmpl/mariadb.cnf
+        dest: /etc/mysql/mariadb.conf.d/50-server.cnf
+
+    - name: "cfg: sql"
+      shell: |
+        mysql -uroot -e "UPDATE mysql.user SET Password = PASSWORD('{{ openstack_db_root_password.data.Value }}') WHERE User = 'root'"
+        mysql -uroot -e "DROP USER ''@'localhost'"
+        mysql -uroot -e "DROP USER ''@'$(hostname)'"
+        mysql -uroot -e "DROP DATABASE test"
+        mysql -uroot -e "FLUSH PRIVILEGES;"
+
+        # mgmt
+        mysql -uroot -p{{ openstack_db_root_password.data.Value }} -e "GRANT ALL PRIVILEGES ON *.* TO {{ openstack_db_mgmt_user.data.Value }}@'%' IDENTIFIED BY '{{ openstack_db_mgmt_password.data.Value }}';"
+        mysql -uroot -p{{ openstack_db_root_password.data.Value }} -e "FLUSH PRIVILEGES;"
+
+        # keystone
+        mysql -uroot -p{{ openstack_db_root_password.data.Value }} -e "CREATE DATABASE {{ openstack_db_keystone.data.Value }};"
+        mysql -uroot -p{{ openstack_db_root_password.data.Value }} -e "GRANT ALL PRIVILEGES ON {{ openstack_db_keystone.data.Value }}.* TO {{ openstack_db_keystone_user.data.Value }}@'localhost' IDENTIFIED BY '{{ openstack_db_keystone_password.data.Value }}';"
+        mysql -uroot -p{{ openstack_db_root_password.data.Value }} -e "GRANT ALL PRIVILEGES ON {{ openstack_db_keystone.data.Value }}.* TO {{ openstack_db_keystone_user.data.Value }}@'%' IDENTIFIED BY '{{ openstack_db_keystone_password.data.Value }}';"
+
+        # glance
+        mysql -uroot -p{{ openstack_db_root_password.data.Value }} -e "CREATE DATABASE {{ openstack_db_glance.data.Value }};"
+        mysql -uroot -p{{ openstack_db_root_password.data.Value }} -e "GRANT ALL PRIVILEGES ON {{ openstack_db_glance.data.Value }}.* TO {{ openstack_db_glance_user.data.Value }}@'localhost' IDENTIFIED BY '{{ openstack_db_glance_password.data.Value }}';"
+        mysql -uroot -p{{ openstack_db_root_password.data.Value }} -e "GRANT ALL PRIVILEGES ON {{ openstack_db_glance.data.Value }}.* TO {{ openstack_db_glance_user.data.Value }}@'%' IDENTIFIED BY '{{ openstack_db_glance_password.data.Value }}';"
+
+        # nova
+        mysql -uroot -p{{ openstack_db_root_password.data.Value }} -e "CREATE DATABASE {{ openstack_db_nova.data.Value }};"
+        mysql -uroot -p{{ openstack_db_root_password.data.Value }} -e "GRANT ALL PRIVILEGES ON {{ openstack_db_nova.data.Value }}.* TO {{ openstack_db_nova_user.data.Value }}@'localhost' IDENTIFIED BY '{{ openstack_db_nova_password.data.Value }}';"
+        mysql -uroot -p{{ openstack_db_root_password.data.Value }} -e "GRANT ALL PRIVILEGES ON {{ openstack_db_nova.data.Value }}.* TO {{ openstack_db_nova_user.data.Value }}@'%' IDENTIFIED BY '{{ openstack_db_nova_password.data.Value }}';"
+
+        # nova_api
+        mysql -uroot -p{{ openstack_db_root_password.data.Value }} -e "CREATE DATABASE {{ openstack_db_nova_api.data.Value }};"
+        mysql -uroot -p{{ openstack_db_root_password.data.Value }} -e "GRANT ALL PRIVILEGES ON {{ openstack_db_nova_api.data.Value }}.* TO {{ openstack_db_nova_user.data.Value }}@'localhost' IDENTIFIED BY '{{ openstack_db_nova_password.data.Value }}';"
+        mysql -uroot -p{{ openstack_db_root_password.data.Value }} -e "GRANT ALL PRIVILEGES ON {{ openstack_db_nova_api.data.Value }}.* TO {{ openstack_db_nova_user.data.Value }}@'%' IDENTIFIED BY '{{ openstack_db_nova_password.data.Value }}';"
+
+        # nova_cell
+        mysql -uroot -p{{ openstack_db_root_password.data.Value }} -e "CREATE DATABASE {{ openstack_db_nova_cell.data.Value }};"
+        mysql -uroot -p{{ openstack_db_root_password.data.Value }} -e "GRANT ALL PRIVILEGES ON {{ openstack_db_nova_cell.data.Value }}.* TO {{ openstack_db_nova_user.data.Value }}@'localhost' IDENTIFIED BY '{{ openstack_db_nova_password.data.Value }}';"
+        mysql -uroot -p{{ openstack_db_root_password.data.Value }} -e "GRANT ALL PRIVILEGES ON {{ openstack_db_nova_cell.data.Value }}.* TO {{ openstack_db_nova_user.data.Value }}@'%' IDENTIFIED BY '{{ openstack_db_nova_password.data.Value }}';"
+
+        # placement
+        mysql -uroot -p{{ openstack_db_root_password.data.Value }} -e "CREATE DATABASE {{ openstack_db_placement.data.Value }};"
+        mysql -uroot -p{{ openstack_db_root_password.data.Value }} -e "GRANT ALL PRIVILEGES ON {{ openstack_db_placement.data.Value }}.* TO {{ openstack_db_placement_user.data.Value }}@'localhost' IDENTIFIED BY '{{ openstack_db_placement_password.data.Value }}';"
+        mysql -uroot -p{{ openstack_db_root_password.data.Value }} -e "GRANT ALL PRIVILEGES ON {{ openstack_db_placement.data.Value }}.* TO {{ openstack_db_placement_user.data.Value }}@'%' IDENTIFIED BY '{{ openstack_db_placement_password.data.Value }}';"
+
+        # neutron
+        mysql -uroot -p{{ openstack_db_root_password.data.Value }} -e "CREATE DATABASE {{ openstack_db_neutron.data.Value }};"
+        mysql -uroot -p{{ openstack_db_root_password.data.Value }} -e "GRANT ALL PRIVILEGES ON {{ openstack_db_neutron.data.Value }}.* TO {{ openstack_db_neutron_user.data.Value }}@'localhost' IDENTIFIED BY '{{ openstack_db_neutron_password.data.Value }}';"
+        mysql -uroot -p{{ openstack_db_root_password.data.Value }} -e "GRANT ALL PRIVILEGES ON {{ openstack_db_neutron.data.Value }}.* TO {{ openstack_db_neutron_user.data.Value }}@'%' IDENTIFIED BY '{{ openstack_db_neutron_password.data.Value }}';"
+
+        # cinder
+        mysql -uroot -p{{ openstack_db_root_password.data.Value }} -e "CREATE DATABASE {{ openstack_db_cinder.data.Value }};"
+        mysql -uroot -p{{ openstack_db_root_password.data.Value }} -e "GRANT ALL PRIVILEGES ON {{ openstack_db_cinder.data.Value }}.* TO {{ openstack_db_cinder_user.data.Value }}@'localhost' IDENTIFIED BY '{{ openstack_db_cinder_password.data.Value }}';"
+        mysql -uroot -p{{ openstack_db_root_password.data.Value }} -e "GRANT ALL PRIVILEGES ON {{ openstack_db_cinder.data.Value }}.* TO {{ openstack_db_cinder_user.data.Value }}@'%' IDENTIFIED BY '{{ openstack_db_cinder_password.data.Value }}';"
+
+        mysql -uroot -p{{ openstack_db_root_password.data.Value }} -e "FLUSH PRIVILEGES;"
+
+    - name: "systemd (restart): db"
+      systemd:
+        name: mysql
+        state: restarted
+
+    - name: "systemd (enabled): db"
+      systemd:
+        name: mysql
+        enabled: yes
+
+    # MQ
+    - name: "cfg: mq"
+      shell: |
+        rabbitmqctl add_user {{ openstack_mq_user.data.Value }} {{ openstack_mq_password.data.Value }}
+        rabbitmqctl set_permissions {{ openstack_mq_user.data.Value }} ".*" ".*" ".*"
+
+    - name: "systemd (restart): mq"
+      systemd:
+        name: rabbitmq-server
+        state: restarted
+
+    - name: "systemd (enabled): mq"
+      systemd:
+        name: rabbitmq-server
+        enabled: yes
+
+    # CACHE
+    - name: "cfg: cache"
+      template:
+        src: tmpl/memcached.conf
+        dest: /etc/memcached.conf
+
+    - name: "systemd (restart): cache"
+      systemd:
+        name: memcached
+        state: restarted
+
+    - name: "systemd (enabled): cache"
+      systemd:
+        name: memcached
+        enabled: yes
+
+    # OPENSTACK
+    - name: "install openstack: controller (keystone,glance,nova,neutron,cinder,horizon)"
+      apt:
+        pkg:
+          - python3-openstackclient
+          - python3-oauth2client
+          - keystone
+          - glance
+          - nova-api
+          - nova-conductor
+          - nova-scheduler
+          - nova-novncproxy
+          - placement-api
+          - python3-novaclient
+          - neutron-server
+          - neutron-plugin-ml2
+          - neutron-metadata-agent
+          - python3-neutronclient
+          - cinder-api
+          - cinder-scheduler
+          - python3-cinderclient
+          - openstack-dashboard
+        state: present
+
+    # KEYSTONE
+    - name: "cfg: keystone"
+      template:
+        src: tmpl/keystone.conf
+        dest: /etc/keystone/keystone.conf
+        owner: keystone
+        group: keystone
+
+    - name: "cmd: keystone-boot"
+      shell: |
+        su -s /bin/bash keystone -c "keystone-manage db_sync"
+        keystone-manage fernet_setup --keystone-user keystone --keystone-group keystone
+        keystone-manage credential_setup --keystone-user keystone --keystone-group keystone
+
+        keystone-manage bootstrap --bootstrap-password {{ openstack_keystone_bootstrap_password.data.Value }} \
+          --bootstrap-admin-url {{ openstack_endpoint_schema.data.Value }}://{{ openstack_host_api.data.Value }}:{{ openstack_endpoint_keystone_port.data.Value }}/v3/ \
+          --bootstrap-internal-url {{ openstack_endpoint_schema.data.Value }}://{{ openstack_host_api.data.Value }}:{{ openstack_endpoint_keystone_port.data.Value }}/v3/ \
+          --bootstrap-public-url {{ openstack_endpoint_schema.data.Value }}://{{ openstack_host_api.data.Value }}:{{ openstack_endpoint_keystone_port.data.Value }}/v3/ \
+          --bootstrap-region-id RegionOne
+
+    - name: "cfg: apache2"
+      template:
+        src: tmpl/apache2.conf
+        dest: /etc/apache2/apache2.conf
+
+    - name: "systemd (restart): apache2"
+      systemd:
+        name: apache2
+        state: restarted
+
+    - name: "cmd: keystone-cfg"
+      shell: |
+        openstack project create --domain default --description "Service Project" service
+
+        openstack user create --domain default --project service --password {{ openstack_service_glance_password.data.Value }} {{ openstack_service_glance_user.data.Value }}
+        openstack role add --project service --user {{ openstack_service_glance_user.data.Value }} admin
+
+        # glance
+        openstack service create --name glance --description "OpenStack Image service" image
+        openstack endpoint create --region RegionOne image public {{ openstack_endpoint_schema.data.Value }}://{{ openstack_host_api.data.Value }}:{{ openstack_endpoint_glance_port.data.Value }}
+        openstack endpoint create --region RegionOne image internal {{ openstack_endpoint_schema.data.Value }}://{{ openstack_host_api.data.Value }}:{{ openstack_endpoint_glance_port.data.Value }}
+        openstack endpoint create --region RegionOne image admin {{ openstack_endpoint_schema.data.Value }}://{{ openstack_host_api.data.Value }}:{{ openstack_endpoint_glance_port.data.Value }}
+
+        openstack user create --domain default --project service --password {{ openstack_service_nova_password.data.Value }} {{ openstack_service_nova_user.data.Value }}
+        openstack role add --project service --user {{ openstack_service_nova_user.data.Value }} admin
+
+        openstack user create --domain default --project service --password {{ openstack_service_placement_password.data.Value }} {{ openstack_service_placement_user.data.Value }}
+        openstack role add --project service --user {{ openstack_service_placement_user.data.Value }} admin
+
+        # nova
+        openstack service create --name nova --description "OpenStack Compute service" compute
+        openstack endpoint create --region RegionOne compute public {{ openstack_endpoint_schema.data.Value }}://{{ openstack_host_api.data.Value }}:{{ openstack_endpoint_nova_port.data.Value }}/v2.1/%\(tenant_id\)s
+        openstack endpoint create --region RegionOne compute internal {{ openstack_endpoint_schema.data.Value }}://{{ openstack_host_api.data.Value }}:{{ openstack_endpoint_nova_port.data.Value }}/v2.1/%\(tenant_id\)s
+        openstack endpoint create --region RegionOne compute admin {{ openstack_endpoint_schema.data.Value }}://{{ openstack_host_api.data.Value }}:{{ openstack_endpoint_nova_port.data.Value }}/%\(tenant_id\)s
+
+        # placement
+        openstack service create --name placement --description "OpenStack Compute Placement service" placement
+        openstack endpoint create --region RegionOne placement public {{ openstack_endpoint_schema.data.Value }}://{{ openstack_host_api.data.Value }}:{{ openstack_endpoint_placement_port.data.Value }}
+        openstack endpoint create --region RegionOne placement internal {{ openstack_endpoint_schema.data.Value }}://{{ openstack_host_api.data.Value }}:{{ openstack_endpoint_placement_port.data.Value }}
+        openstack endpoint create --region RegionOne placement admin {{ openstack_endpoint_schema.data.Value }}://{{ openstack_host_api.data.Value }}:{{ openstack_endpoint_placement_port.data.Value }}
+
+        # neutron
+        openstack user create --domain default --project service --password {{ openstack_service_neutron_password.data.Value }} {{ openstack_service_neutron_user.data.Value }}
+        openstack role add --project service --user {{ openstack_service_neutron_user.data.Value }} admin
+
+        openstack service create --name neutron --description "OpenStack Networking service" network
+        openstack endpoint create --region RegionOne neutron public {{ openstack_endpoint_schema.data.Value }}://{{ openstack_host_api.data.Value }}:{{ openstack_endpoint_neutron_port.data.Value }}
+        openstack endpoint create --region RegionOne neutron internal {{ openstack_endpoint_schema.data.Value }}://{{ openstack_host_api.data.Value }}:{{ openstack_endpoint_neutron_port.data.Value }}
+        openstack endpoint create --region RegionOne neutron admin {{ openstack_endpoint_schema.data.Value }}://{{ openstack_host_api.data.Value }}:{{ openstack_endpoint_neutron_port.data.Value }}
+
+        # cinder
+        openstack user create --domain default --project service --password {{ openstack_service_cinder_password.data.Value }} {{ openstack_service_cinder_user.data.Value }}
+        openstack role add --project service --user {{ openstack_service_cinder_user.data.Value }} admin
+
+        openstack service create --name cinderv3 --description "OpenStack Block Storage" volumev3
+        openstack endpoint create --region RegionOne volumev3 public {{ openstack_endpoint_schema.data.Value }}://{{ openstack_host_api.data.Value }}:{{ openstack_endpoint_cinder_port.data.Value }}/v3/%\(tenant_id\)s
+        openstack endpoint create --region RegionOne volumev3 internal {{ openstack_endpoint_schema.data.Value }}://{{ openstack_host_api.data.Value }}:{{ openstack_endpoint_cinder_port.data.Value }}/v3/%\(tenant_id\)s
+        openstack endpoint create --region RegionOne volumev3 admin {{ openstack_endpoint_schema.data.Value }}://{{ openstack_host_api.data.Value }}:{{ openstack_endpoint_cinder_port.data.Value }}/v3/%\(tenant_id\)s
+
+        openstack project create --description 'OpenStack OpenLabs' openlabs --domain default
+        openstack user create --project openlabs --password {{ openstack_mgmt_password.data.Value }} {{ openstack_mgmt_user.data.Value }}
+        openstack role add --project openlabs --user {{ openstack_mgmt_user.data.Value }} --user-domain default member
+        openstack role add --project openlabs --user {{ openstack_mgmt_user.data.Value }} --user-domain default admin
+
+      environment:
+        OS_PROJECT_DOMAIN_NAME: default
+        OS_USER_DOMAIN_NAME: default
+        OS_PROJECT_NAME: admin
+        OS_USERNAME: admin
+        OS_PASSWORD: "{{ openstack_keystone_bootstrap_password.data.Value }}"
+        OS_AUTH_URL: "{{ openstack_endpoint_schema.data.Value }}://{{ openstack_host_api.data.Value }}:{{ openstack_endpoint_keystone_port.data.Value }}/v3"
+        OS_IDENTITY_API_VERSION: 3
+        OS_IMAGE_API_VERSION: 2
+        OS_VOLUME_API_VERSION: 3
+
+    - name: "cmd: keystone-debug"
+      shell: |
+        openstack user list
+        openstack service list
+        openstack endpoint list
+      register: openstack_endpoint_debug
+      environment:
+        OS_PROJECT_DOMAIN_NAME: default
+        OS_USER_DOMAIN_NAME: default
+        OS_PROJECT_NAME: admin
+        OS_USERNAME: admin
+        OS_PASSWORD: "{{ openstack_keystone_bootstrap_password.data.Value }}"
+        OS_AUTH_URL: "{{ openstack_endpoint_schema.data.Value }}://{{ openstack_host_api.data.Value }}:{{ openstack_endpoint_keystone_port.data.Value }}/v3"
+        OS_IDENTITY_API_VERSION: 3
+        OS_IMAGE_API_VERSION: 2
+        OS_VOLUME_API_VERSION: 3
+    - debug: var=openstack_endpoint_debug.stdout_lines
+
+    # GLANCE
+    - name: "cfg: glance"
+      template:
+        src: tmpl/glance-api.conf
+        dest: /etc/glance/glance-api.conf
+        owner: glance
+        group: glance
+
+    - name: "cmd: glance-boot"
+      shell: |
+        su -s /bin/bash glance -c "glance-manage db_sync"
+
+    - name: "systemd (restart): glance"
+      systemd:
+        name: glance-api
+        state: restarted
+
+    - name: "systemd (enabled): glance"
+      systemd:
+        name: glance-api
+        enabled: yes
+
+    # CINDER
+    - name: "cfg: cinder"
+      template:
+        src: tmpl/cinder-controller.conf
+        dest: /etc/cinder/cinder.conf
+        owner: cinder
+        group: cinder
+
+    - name: "cmd: cinder-boot"
+      shell: |
+        su -s /bin/bash cinder -c "cinder-manage db sync"
+
+    - name: "systemd (restart): cinder-scheduler"
+      systemd:
+        name: cinder-scheduler
+        state: restarted
+
+    - name: "systemd (enabled): cinder-scheduler"
+      systemd:
+        name: cinder-scheduler
+        enabled: yes
+
+    # NEUTRON
+    - name: "cfg: neutron"
+      template:
+        src: tmpl/neutron-controller.conf
+        dest: /etc/neutron/neutron.conf
+        owner: neutron
+        group: neutron
+
+    - name: "cfg: neutron/ml2"
+      template:
+        src: tmpl/neutron-ml2_conf-controller.ini
+        dest: /etc/neutron/plugins/ml2/ml2_conf.ini
+        owner: neutron
+        group: neutron
+
+    - name: "cfg: neutron/metadata"
+      template:
+        src: tmpl/neutron-metadata_agent-controller.ini
+        dest: /etc/neutron/metadata_agent.ini
+        owner: neutron
+        group: neutron
+
+    - name: "cmd: neutron-boot"
+      shell: |
+        ln -s /etc/neutron/plugins/ml2/ml2_conf.ini /etc/neutron/plugin.ini
+        su -s /bin/bash neutron -c "neutron-db-manage --config-file /etc/neutron/neutron.conf --config-file /etc/neutron/plugin.ini upgrade head"
+
+    - name: "systemd (restart): neutron-metadata-agent"
+      systemd:
+        name: neutron-metadata-agent
+        state: restarted
+
+    - name: "systemd (enabled): neutron-metadata-agent"
+      systemd:
+        name: neutron-metadata-agent
+        enabled: yes
+
+    - name: "systemd (restart): neutron-server"
+      systemd:
+        name: neutron-server
+        state: restarted
+
+    - name: "systemd (enabled): neutron-server"
+      systemd:
+        name: neutron-server
+        enabled: yes
+
+    # NOVA
+    - name: "cfg: nova"
+      template:
+        src: tmpl/nova-controller.conf
+        dest: /etc/nova/nova.conf
+        owner: nova
+        group: nova
+
+    - name: "cfg: placement"
+      template:
+        src: tmpl/placement-controller.conf
+        dest: /etc/placement/placement.conf
+        owner: placement
+        group: placement
+
+    - name: "cmd: placement-boot"
+      shell: |
+        su -s /bin/bash placement -c "placement-manage db sync"
+
+    - name: "cmd: nova-boot"
+      shell: |
+        su -s /bin/bash nova -c "nova-manage api_db sync"
+        su -s /bin/bash nova -c "nova-manage cell_v2 map_cell0"
+        su -s /bin/bash nova -c "nova-manage db sync"
+        su -s /bin/bash nova -c "nova-manage cell_v2 create_cell --name cell1"
+
+    - name: "systemd (restart): apache2"
+      systemd:
+        name: apache2
+        state: restarted
+
+    - name: "systemd (restart): nova-api"
+      systemd:
+        name: nova-api
+        state: restarted
+
+    - name: "systemd (enabled): nova-api"
+      systemd:
+        name: nova-api
+        enabled: yes
+
+    - name: "systemd (restart): nova-conductor"
+      systemd:
+        name: nova-conductor
+        state: restarted
+
+    - name: "systemd (enabled): nova-conductor"
+      systemd:
+        name: nova-conductor
+        enabled: yes
+
+    - name: "systemd (restart): nova-scheduler"
+      systemd:
+        name: nova-conductor
+        state: restarted
+
+    - name: "systemd (enabled): nova-scheduler"
+      systemd:
+        name: nova-conductor
+        enabled: yes
+
+    - name: "systemd (restart): nova-novncproxy"
+      systemd:
+        name: nova-conductor
+        state: restarted
+
+    - name: "systemd (enabled): nova-novncproxy"
+      systemd:
+        name: nova-conductor
+        enabled: yes
+
+    # HORIZON
+    - name: "cfg: horizon"
+      template:
+        src: tmpl/horizon-settings.py
+        dest: /etc/openstack-dashboard/local_settings.py
+        owner: horizon
+        group: horizon
+
+    - name: "systemd (restart): apache2"
+      systemd:
+        name: apache2
+        state: restarted
+
+    # RSYSLOG & LOGDNA
+    - name: "cfg: rsyslog"
+      template:
+        src: tmpl/rsyslog.conf
+        dest: /etc/rsyslog.d/77-logdna.conf
+
+    - name: "systemd (restart): rsyslog"
+      systemd:
+        name: rsyslog
+        state: restarted
+

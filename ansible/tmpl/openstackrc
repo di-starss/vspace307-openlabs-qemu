@@ -1,0 +1,12 @@
+# OPENSTACK
+export OS_PROJECT_DOMAIN_ID=default
+export OS_USER_DOMAIN_ID=default
+export OS_PROJECT_DOMAIN_NAME=default
+export OS_USER_DOMAIN_NAME=default
+export OS_PROJECT_NAME=admin
+export OS_USERNAME=admin
+export OS_PASSWORD={{ openstack_keystone_bootstrap_password.data.Value }}
+export OS_AUTH_URL={{ openstack_endpoint_schema.data.Value }}://{{ openstack_host_api.data.Value }}:{{ openstack_endpoint_keystone_port.data.Value }}/v3
+export OS_IDENTITY_API_VERSION=3
+export OS_IMAGE_API_VERSION=2
+export OS_VOLUME_API_VERSION=3

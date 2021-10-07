@@ -1,0 +1,20 @@
+{{ openstack_ip_my.data.Value }} {{ openlabs_vm_hostname }}
+
+{% if openstack_ip_ams_kvm0.data.Value is defined %}
+{{ openstack_ip_ams_kvm0.data.Value }}  {{ openstack_hostname_ams_kvm0.data.Value }}
+{% endif %}
+{% if openstack_ip_ams_kvm1.data.Value is defined %}
+{{ openstack_ip_ams_kvm1.data.Value }}  {{ openstack_hostname_ams_kvm1.data.Value }}
+{% endif %}
+{% if openstack_ip_ams_kvm2.data.Value is defined %}
+{{ openstack_ip_ams_kvm2.data.Value }}  {{ openstack_hostname_ams_kvm2.data.Value }}
+{% endif %}
+{% if openstack_ip_ldn_kvm3.data.Value is defined %}
+{{ openstack_ip_ldn_kvm3.data.Value }}  {{ openstack_hostname_ldn_kvm3.data.Value }}
+{% endif %}
+{% if openstack_ip_ldn_kvm4.data.Value is defined %}
+{{ openstack_ip_ldn_kvm4.data.Value }}  {{ openstack_hostname_ldn_kvm4.data.Value }}
+{% endif %}
+{% if openstack_ip_ldn_kvm5.data.Value is defined %}
+{{ openstack_ip_ldn_kvm5.data.Value }}  {{ openstack_hostname_ldn_kvm5.data.Value }}
+{% endif %}

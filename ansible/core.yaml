@@ -1,0 +1,642 @@
+#
+# Openstack / Core
+#
+
+---
+- name: "vars"
+  include_vars: vars.json
+- debug: var=openlabs_consul_host
+- debug: var=openlabs_consul_port
+- debug: var=openlabs_consul_scheme
+- debug: var=openlabs_env
+- debug: var=openlabs_vm_name
+- debug: var=openlabs_vm_hostname
+- debug: var=openlabs_mgmt_user
+- debug: var=openlabs_mgmt_public_key
+
+- name: "install base"
+  apt:
+    pkg:
+      - python3-consul
+      - chrony
+      - software-properties-common
+    state: present
+
+- name: "install galaxy collection: community.general"
+  shell: ansible-galaxy collection install community.general
+
+# KV
+# openstack_release
+# openstack_rsyslog_logdna_key
+- name: "get k/v: openstack_release"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/openstack/openstack_release"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_release
+- debug: var=openstack_release.data.Value
+
+- name: "get k/v: openstack_rsyslog_logdna_key"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/openstack/openstack_rsyslog_logdna_key"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_rsyslog_logdna_key
+- debug: var=openstack_rsyslog_logdna_key.data.Value
+
+# openstack_db_root_password
+- name: "get k/v: openstack_db_root_password"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/openstack/openstack_db_root_password"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_db_root_password
+- debug: var=openstack_db_root_password.data.Value
+
+# openstack_db_mgmt_user
+# openstack_db_mgmt_password
+- name: "get k/v: openstack_db_mgmt_user"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/openstack/openstack_db_mgmt_user"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_db_mgmt_user
+- debug: var=openstack_db_mgmt_user.data.Value
+
+- name: "get k/v: openstack_db_mgmt_password"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/openstack/openstack_db_mgmt_password"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_db_mgmt_password
+- debug: var=openstack_db_mgmt_password.data.Value
+
+# openstack_db_keystone_user
+# openstack_db_keystone_password
+- name: "get k/v: openstack_db_keystone_user"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/openstack/openstack_db_keystone_user"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_db_keystone_user
+- debug: var=openstack_db_keystone_user.data.Value
+
+- name: "get k/v: openstack_db_keystone_password"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/openstack/openstack_db_keystone_password"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_db_keystone_password
+- debug: var=openstack_db_keystone_password.data.Value
+
+# openstack_db_glance_user
+# openstack_db_glance_password
+- name: "get k/v: openstack_db_glance_user"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/openstack/openstack_db_glance_user"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_db_glance_user
+- debug: var=openstack_db_glance_user.data.Value
+
+- name: "get k/v: openstack_db_glance_password"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/openstack/openstack_db_glance_password"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_db_glance_password
+- debug: var=openstack_db_glance_password.data.Value
+
+# openstack_db_nova_user
+# openstack_db_nova_password
+- name: "get k/v: openstack_db_nova_user"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/openstack/openstack_db_nova_user"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_db_nova_user
+- debug: var=openstack_db_nova_user.data.Value
+
+- name: "get k/v: openstack_db_nova_password"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/openstack/openstack_db_nova_password"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_db_nova_password
+- debug: var=openstack_db_nova_password.data.Value
+
+# openstack_db_placement_user
+# openstack_db_placement_password
+- name: "get k/v: openstack_db_placement_user"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/openstack/openstack_db_placement_user"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_db_placement_user
+- debug: var=openstack_db_placement_user.data.Value
+
+- name: "get k/v: openstack_db_placement_password"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/openstack/openstack_db_placement_password"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_db_placement_password
+- debug: var=openstack_db_placement_password.data.Value
+
+# openstack_db_neutron_user
+# openstack_db_neutron_password
+- name: "get k/v: openstack_db_neutron_user"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/openstack/openstack_db_neutron_user"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_db_neutron_user
+- debug: var=openstack_db_neutron_user.data.Value
+
+- name: "get k/v: openstack_db_neutron_password"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/openstack/openstack_db_neutron_password"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_db_neutron_password
+- debug: var=openstack_db_neutron_password.data.Value
+
+# openstack_db_cinder_user
+# openstack_db_cinder_password
+- name: "get k/v: openstack_db_cinder_user"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/openstack/openstack_db_cinder_user"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_db_cinder_user
+- debug: var=openstack_db_cinder_user.data.Value
+
+- name: "get k/v: openstack_db_cinder_password"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/openstack/openstack_db_cinder_password"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_db_cinder_password
+- debug: var=openstack_db_cinder_password.data.Value
+
+# openstack_db_keystone
+- name: "get k/v: openstack_db_keystone"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/openstack/openstack_db_keystone"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_db_keystone
+- debug: var=openstack_db_keystone.data.Value
+
+# openstack_db_glance
+- name: "get k/v: openstack_db_glance"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/openstack/openstack_db_glance"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_db_glance
+- debug: var=openstack_db_glance.data.Value
+
+# openstack_db_nova
+- name: "get k/v: openstack_db_nova"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/openstack/openstack_db_nova"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_db_nova
+- debug: var=openstack_db_nova.data.Value
+
+# openstack_db_nova_api
+- name: "get k/v: openstack_db_nova_api"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/openstack/openstack_db_nova_api"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_db_nova_api
+- debug: var=openstack_db_nova_api.data.Value
+
+# openstack_db_nova_cell
+- name: "get k/v: openstack_db_nova_cell"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/openstack/openstack_db_nova_cell"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_db_nova_cell
+- debug: var=openstack_db_nova_cell.data.Value
+
+# openstack_db_placement
+- name: "get k/v: openstack_db_placement"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/openstack/openstack_db_placement"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_db_placement
+- debug: var=openstack_db_placement.data.Value
+
+# openstack_db_neutron
+- name: "get k/v: openstack_db_neutron"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/openstack/openstack_db_neutron"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_db_neutron
+- debug: var=openstack_db_neutron.data.Value
+
+# openstack_db_cinder
+- name: "get k/v: openstack_db_cinder"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/openstack/openstack_db_cinder"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_db_cinder
+- debug: var=openstack_db_cinder.data.Value
+
+# openstack_mq_user
+# openstack_mq_password
+- name: "get k/v: openstack_mq_user"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/openstack/openstack_mq_user"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_mq_user
+- debug: var=openstack_mq_user.data.Value
+
+- name: "get k/v: openstack_mq_password"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/openstack/openstack_mq_password"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_mq_password
+- debug: var=openstack_mq_password.data.Value
+
+# openstack_memcached_port
+- name: "get k/v: openstack_memcached_port"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/openstack/openstack_memcached_port"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_memcached_port
+- debug: var=openstack_memcached_port.data.Value
+
+# openstack_vm_endpoint
+# openstack_endpoint_schema
+- name: "get k/v: openstack_vm_endpoint"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/openstack/openstack_vm_endpoint"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_vm_endpoint
+- debug: var=openstack_vm_endpoint.data.Value
+
+- name: "get k/v: openstack_endpoint_schema"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/openstack/openstack_endpoint_schema"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_endpoint_schema
+- debug: var=openstack_endpoint_schema.data.Value
+
+# openstack_endpoint_keystone_port
+# openstack_endpoint_glance_port
+# openstack_endpoint_nova_port
+# openstack_endpoint_placement_port
+# openstack_endpoint_neutron_port
+# openstack_endpoint_cinder_port
+- name: "get k/v: openstack_endpoint_keystone_port"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/openstack/openstack_endpoint_keystone_port"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_endpoint_keystone_port
+- debug: var=openstack_endpoint_keystone_port.data.Value
+
+- name: "get k/v: openstack_endpoint_glance_port"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/openstack/openstack_endpoint_glance_port"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_endpoint_glance_port
+- debug: var=openstack_endpoint_glance_port.data.Value
+
+- name: "get k/v: openstack_endpoint_nova_port"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/openstack/openstack_endpoint_nova_port"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_endpoint_nova_port
+- debug: var=openstack_endpoint_nova_port.data.Value
+
+- name: "get k/v: openstack_endpoint_placement_port"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/openstack/openstack_endpoint_placement_port"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_endpoint_placement_port
+- debug: var=openstack_endpoint_placement_port.data.Value
+
+- name: "get k/v: openstack_endpoint_neutron_port"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/openstack/openstack_endpoint_neutron_port"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_endpoint_neutron_port
+- debug: var=openstack_endpoint_neutron_port.data.Value
+
+- name: "get k/v: openstack_endpoint_cinder_port"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/openstack/openstack_endpoint_cinder_port"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_endpoint_cinder_port
+- debug: var=openstack_endpoint_cinder_port.data.Value
+
+# openstack_keystone_bootstrap_password
+# openstack_neutron_metadata_proxy_shared_secret
+- name: "get k/v: openstack_keystone_bootstrap_password"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/openstack/openstack_keystone_bootstrap_password"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_keystone_bootstrap_password
+- debug: var=openstack_keystone_bootstrap_password.data.Value
+
+- name: "get k/v: openstack_neutron_metadata_proxy_shared_secret"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/openstack/openstack_neutron_metadata_proxy_shared_secret"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_neutron_metadata_proxy_shared_secret
+- debug: var=openstack_neutron_metadata_proxy_shared_secret.data.Value
+
+# openstack_mgmt_user
+# openstack_mgmt_password
+- name: "get k/v: openstack_mgmt_user"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/openstack/openstack_mgmt_user"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_mgmt_user
+- debug: var=openstack_mgmt_user.data.Value
+
+- name: "get k/v: openstack_mgmt_password"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/openstack/openstack_mgmt_password"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_mgmt_password
+- debug: var=openstack_mgmt_password.data.Value
+
+# openstack_service_glance_user
+# openstack_service_nova_user
+# openstack_service_placement_user
+# openstack_service_neutron_user
+# openstack_service_cinder_user
+- name: "get k/v: openstack_service_glance_user"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/openstack/openstack_service_glance_user"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_service_glance_user
+- debug: var=openstack_service_glance_user.data.Value
+
+- name: "get k/v: openstack_service_nova_user"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/openstack/openstack_service_nova_user"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_service_nova_user
+- debug: var=openstack_service_nova_user.data.Value
+
+- name: "get k/v: openstack_service_placement_user"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/openstack/openstack_service_placement_user"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_service_placement_user
+- debug: var=openstack_service_placement_user.data.Value
+
+- name: "get k/v: openstack_service_neutron_user"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/openstack/openstack_service_neutron_user"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_service_neutron_user
+- debug: var=openstack_service_neutron_user.data.Value
+
+- name: "get k/v: openstack_service_cinder_user"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/openstack/openstack_service_cinder_user"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_service_cinder_user
+- debug: var=openstack_service_cinder_user.data.Value
+
+# openstack_service_glance_password
+# openstack_service_nova_password
+# openstack_service_placement_password
+# openstack_service_neutron_password
+# openstack_service_cinder_password
+- name: "get k/v: openstack_service_glance_user"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/openstack/openstack_service_glance_password"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_service_glance_password
+- debug: var=openstack_service_glance_password.data.Value
+
+- name: "get k/v: openstack_service_nova_password"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/openstack/openstack_service_nova_password"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_service_nova_password
+- debug: var=openstack_service_nova_password.data.Value
+
+- name: "get k/v: openstack_service_placement_user"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/openstack/openstack_service_placement_password"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_service_placement_password
+- debug: var=openstack_service_placement_password.data.Value
+
+- name: "get k/v: openstack_service_neutron_password"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/openstack/openstack_service_neutron_password"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_service_neutron_password
+- debug: var=openstack_service_neutron_password.data.Value
+
+- name: "get k/v: openstack_service_cinder_password"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/openstack/openstack_service_cinder_password"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_service_cinder_password
+- debug: var=openstack_service_cinder_password.data.Value
+
+# openstack_compute_ovs_if
+# openstack_network_ovs_if
+- name: "get k/v: openstack_compute_ovs_if"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/openstack/openstack_compute_ovs_if"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_compute_ovs_if
+- debug: var=openstack_compute_ovs_if.data.Value
+
+- name: "get k/v: openstack_network_ovs_if"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/openstack/openstack_network_ovs_if"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_network_ovs_if
+- debug: var=openstack_network_ovs_if.data.Value
+
+# vm
+# --
+# openstack_vm_db
+# openstack_vm_cache
+# openstack_vm_mq
+- name: "get k/v: openstack_vm_db"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/openstack/openstack_vm_db"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_vm_db
+- debug: var=openstack_vm_db.data.Value
+
+- name: "get k/v: openstack_vm_cache"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/openstack/openstack_vm_cache"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_vm_cache
+- debug: var=openstack_vm_cache.data.Value
+
+- name: "get k/v: openstack_vm_mq"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/openstack/openstack_vm_mq"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_vm_mq
+- debug: var=openstack_vm_mq.data.Value
+
+# host
+# ----
+# k/v: openstack_host_db    __ "openlabs/{{ openlabs_env }}/{{ openstack_vm_db }}/vm_fqdn"
+# k/v: openstack_host_cache __ "openlabs/{{ openlabs_env }}/{{ openstack_vm_cache }}/vm_fqdn"
+# k/v: openstack_host_mq    __ "openlabs/{{ openlabs_env }}/{{ openstack_vm_mq }}/vm_fqdn"
+# k/v: openstack_host_api    __ "openlabs/{{ openlabs_env }}/{{ openstack_vm_endpoint }}/vm_fqdn"
+#
+- name: "get k/v: openstack_host_db"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/vm/{{ openstack_vm_db.data.Value }}/vm_fqdn"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_host_db
+- debug: var=openstack_host_db.data.Value
+
+- name: "get k/v: openstack_host_cache"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/vm/{{ openstack_vm_cache.data.Value }}/vm_fqdn"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_host_cache
+- debug: var=openstack_host_cache.data.Value
+
+- name: "get k/v: openstack_host_mq"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/vm/{{ openstack_vm_mq.data.Value }}/vm_fqdn"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_host_mq
+- debug: var=openstack_host_mq.data.Value
+
+- name: "get k/v: openstack_host_api"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/vm/{{ openstack_vm_endpoint.data.Value }}/vm_fqdn"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_host_api
+- debug: var=openstack_host_api.data.Value
+
+# openstack_ip_api
+# openstack_ip_my
+- name: "get k/v: openstack_ip_api"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/vm/{{ openstack_vm_endpoint.data.Value }}/vm_ip"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_ip_api
+- debug: var=openstack_ip_api.data.Value
+
+- name: "get k/v: openstack_ip_my"
+  consul_kv:
+    key: "openlabs/{{ openlabs_env }}/vm/{{ openlabs_vm_hostname }}/vm_ip"
+    host: "{{ openlabs_consul_host }}"
+    port: "{{ openlabs_consul_port }}"
+    scheme: "{{ openlabs_consul_scheme }}"
+  register: openstack_ip_my
+- debug: var=openstack_ip_my.data.Value
