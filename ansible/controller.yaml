@@ -155,7 +155,6 @@
           - python3-novaclient
           - neutron-server
           - neutron-plugin-ml2
-          - neutron-metadata-agent
           - python3-neutronclient
           - cinder-api
           - cinder-scheduler
