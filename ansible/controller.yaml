@@ -155,6 +155,7 @@
           - python3-novaclient
           - neutron-server
           - neutron-plugin-ml2
+          #- neutron-metadata-agent
           - python3-neutronclient
           - cinder-api
           - cinder-scheduler
@@ -334,27 +335,27 @@
         owner: neutron
         group: neutron
 
-    - name: "cfg: neutron/metadata"
-      template:
-        src: tmpl/neutron-metadata_agent-controller.ini
-        dest: /etc/neutron/metadata_agent.ini
-        owner: neutron
-        group: neutron
+    #- name: "cfg: neutron/metadata"
+    #  template:
+    #    src: tmpl/neutron-metadata_agent-controller.ini
+    #    dest: /etc/neutron/metadata_agent.ini
+    #    owner: neutron
+    #    group: neutron
 
     - name: "cmd: neutron-boot"
       shell: |
         ln -s /etc/neutron/plugins/ml2/ml2_conf.ini /etc/neutron/plugin.ini
         su -s /bin/bash neutron -c "neutron-db-manage --config-file /etc/neutron/neutron.conf --config-file /etc/neutron/plugin.ini upgrade head"
 
-    - name: "systemd (restart): neutron-metadata-agent"
-      systemd:
-        name: neutron-metadata-agent
-        state: restarted
+    #- name: "systemd (restart): neutron-metadata-agent"
+    #  systemd:
+    #    name: neutron-metadata-agent
+    #    state: restarted
 
-    - name: "systemd (enabled): neutron-metadata-agent"
-      systemd:
-        name: neutron-metadata-agent
-        enabled: yes
+    #- name: "systemd (enabled): neutron-metadata-agent"
+    #  systemd:
+    #    name: neutron-metadata-agent
+    #    enabled: yes
 
     - name: "systemd (restart): neutron-server"
       systemd:
