@@ -87,6 +87,11 @@
       register: ovs_show
     - debug: var=ovs_show.stdout_lines
 
+    # pause
+    - name: "wait: neutron"
+      pause:
+        seconds: 5
+        
     # neutron-openvswitch-agent
     - name: "systemd (restart): neutron-openvswitch-agent"
       systemd:
@@ -97,6 +102,11 @@
       systemd:
         name: neutron-openvswitch-agent
         enabled: yes
+
+    # pause
+    - name: "wait: neutron"
+      pause:
+        seconds: 5
 
     # neutron-dhcp-agent
     - name: "systemd (restart): neutron-dhcp-agent"
@@ -109,6 +119,11 @@
         name: neutron-dhcp-agent
         enabled: yes
 
+    # pause
+    - name: "wait: neutron"
+      pause:
+        seconds: 5
+
     # neutron-metadata-agent
     - name: "systemd (restart): neutron-metadata-agent"
       systemd:
@@ -119,6 +134,11 @@
       systemd:
         name: neutron-metadata-agent
         enabled: yes
+
+    # pause
+    - name: "wait: neutron"
+      pause:
+        seconds: 5
 
     # neutron-l3-agent
     - name: "systemd (restart): neutron-l3-agent"
