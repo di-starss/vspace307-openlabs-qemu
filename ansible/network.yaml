@@ -86,7 +86,12 @@
         ovs-vsctl show
       register: ovs_show
     - debug: var=ovs_show.stdout_lines
-
+    
+    # neutron fix
+    - name: "cmd: neutron fix"
+      shell: |
+        touch /etc/neutron/fwaas_driver.ini
+    
     # pause
     - name: "wait: neutron"
       pause:
